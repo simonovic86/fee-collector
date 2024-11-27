@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fee-collector-scanner
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - MONGODB_URI=mongodb://mongodb:27017/fee-collector
+      - ENABLE_API=${ENABLE_API:-true}
+      - PORT=3000
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      # Chain configurations are passed from .env file
+      - CHAIN_IDS=${CHAIN_IDS}
+      - CHAIN_137_NAME=${CHAIN_137_NAME}
+      - CHAIN_137_RPC_URL=${CHAIN_137_RPC_URL}
+      - CHAIN_137_FEE_COLLECTOR_ADDRESS=${CHAIN_137_FEE_COLLECTOR_ADDRESS}
+      - CHAIN_137_START_BLOCK=${CHAIN_137_START_BLOCK}
+      - CHAIN_137_BLOCK_RANGE=${CHAIN_137_BLOCK_RANGE}
+      - CHAIN_137_RETRY_ATTEMPTS=${CHAIN_137_RETRY_ATTEMPTS}
+      - CHAIN_137_RETRY_DELAY=${CHAIN_137_RETRY_DELAY}
+      - CHAIN_137_POLLING_INTERVAL=${CHAIN_137_POLLING_INTERVAL}
+      - CHAIN_1_NAME=${CHAIN_1_NAME}
+      - CHAIN_1_RPC_URL=${CHAIN_1_RPC_URL}
+      - CHAIN_1_FEE_COLLECTOR_ADDRESS=${CHAIN_1_FEE_COLLECTOR_ADDRESS}
+      - CHAIN_1_START_BLOCK=${CHAIN_1_START_BLOCK}
+      - CHAIN_1_BLOCK_RANGE=${CHAIN_1_BLOCK_RANGE}
+      - CHAIN_1_RETRY_ATTEMPTS=${CHAIN_1_RETRY_ATTEMPTS}
+      - CHAIN_1_RETRY_DELAY=${CHAIN_1_RETRY_DELAY}
+      - CHAIN_1_POLLING_INTERVAL=${CHAIN_1_POLLING_INTERVAL}
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - fee-collector-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  mongodb:
+    image: mongo:5
+    container_name: fee-collector-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=fee-collector
+      # Add these if you want authentication
+      # - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      # - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - fee-collector-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: ["--bind_ip", "0.0.0.0"]
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: fee-collector-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      # Add these if you have MongoDB authentication enabled
+      # - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USERNAME}
+      # - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_ROOT_PASSWORD}
+      - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_EXPRESS_USERNAME:-admin}
+      - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_EXPRESS_PASSWORD:-pass}
+    depends_on:
+      - mongodb
+    networks:
+      - fee-collector-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+    name: fee-collector-mongodb-data
+  mongodb_config:
+    name: fee-collector-mongodb-config
+
+networks:
+  fee-collector-network:
+    name: fee-collector-network
+    driver: bridge

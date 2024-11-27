@@ -1,0 +1,47 @@
+{
+  "name": "fee-collector",
+  "version": "1.0.0",
+  "author": "Janko Simonovic",
+  "description": "A tool to scan FeeCollector events and provide a REST API.",
+  "main": "dist/index.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc",
+    "start": "node dist/index.js",
+    "start:api": "node dist/api/app.js",
+    "dev": "ts-node src/index.ts",
+    "test": "jest --config jest.config.js",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --ci --coverage",
+    "lint": "eslint . --ext .ts"
+  },
+  "dependencies": {
+    "@ethersproject/abstract-provider": "^5.7.0",
+    "@typegoose/typegoose": "^10.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "ethers": "^5.7.0",
+    "express": "^4.19.2",
+    "mongoose": "~6.12.0",
+    "pino": "^7.0.0",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.13",
+    "@types/jest": "^27.0.0",
+    "@types/node": "^16.0.0",
+    "@types/supertest": "^6.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^27.0.0",
+    "rimraf": "^5.0.10",
+    "supertest": "^7.0.0",
+    "ts-jest": "^27.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.4.0",
+    "mongodb-memory-server": "^9.1.6"
+  }
+}
